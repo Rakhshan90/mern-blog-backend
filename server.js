@@ -11,7 +11,9 @@ const app = express();
 //Db connect 
 dbConnect()
 
-//middleware fucnction in express.js 
+/*
+This express middleware is responsible for parsing the incoming json data into req.body .It makes data available to req.body 
+*/ 
 app.use(express.json());
 
 

@@ -26,12 +26,29 @@ const userRegisterCtrl = expressAsyncHandler(async(req, res)=>{
     // res.json({user: "User registered"});
 });
 
+// --------------------------------------//
+//          --- Login --- //
+// --------------------------------------//
+const userLoginCtrl = expressAsyncHandler( async(req, res)=>{
+    //Destructuring email and password 
+    const{email, password} = req.body;
+    //check if user is exist
+    const userFound = await User.findOne({email})
+
+    //check if user's password exist
+    if(userFound && (await userFound.isPasswordMatch(password))){
+        res.json(userFound);
+    }
+    else{
+        res.status(401)
+        throw new Error("Invalid Login Credentials");
+    }
 
 
-
+})
 
 
 //
 
 
-module.exports = {userRegisterCtrl};
+module.exports = {userRegisterCtrl, userLoginCtrl};
