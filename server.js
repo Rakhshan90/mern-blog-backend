@@ -17,21 +17,11 @@ This express middleware is responsible for parsing the incoming json data into r
 app.use(express.json());
 
 
-//register
-// app.post('/api/users/register', userRegisterCtrl)
+
+//User route
 app.use('/api/users', usersRouter);
 
-//login
-app.post('/api/users/login', (req, res)=>{
-    //business logic
-    res.send({user: "users logged in"});
-})
 
-//get user
-app.get('/api/users', (req, res)=>{
-    //business logic
-    res.send({user: "Fetch all users"});
-})
 
 
 

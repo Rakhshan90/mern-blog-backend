@@ -1,5 +1,7 @@
+const { generateToken } = require('../config/token/generateToken');
 const User = require('../model/User');
 const expressAsyncHandler = require('express-async-handler');
+const validateMongoId  = require('../util/validateMongoId');
 
 // --------------------------------------//
 //          --- Register --- //
@@ -37,7 +39,15 @@ const userLoginCtrl = expressAsyncHandler( async(req, res)=>{
 
     //check if user's password exist
     if(userFound && (await userFound.isPasswordMatch(password))){
-        res.json(userFound);
+        res.json({
+            _id: userFound?._id,
+            firstName: userFound?.firstName,
+            lastName: userFound?.lastName,
+            email: userFound?.email,
+            profilePhoto: userFound?.profilePhoto,
+            isAdmin: userFound?.isAdmin,
+            token: generateToken(userFound?._id),
+        });
     }
     else{
         res.status(401)
@@ -48,7 +58,37 @@ const userLoginCtrl = expressAsyncHandler( async(req, res)=>{
 })
 
 
-//
+// --------------------------------------//
+//          --- Fetch all users --- //
+// --------------------------------------//
+const usersFetchCtrl = expressAsyncHandler(async(req, res)=>{
+    try{
+        const users = await User.find({});
+        res.json(users);
+    }catch(err){
+        res.json(err);
+    }
+})
+
+// --------------------------------------//
+//          --- Delete user --- //
+// --------------------------------------//
+const deleteUserCtrl = expressAsyncHandler(async(req, res)=>{
+    const {userId} = req.params;
+    //check if user id is valid or not
+    validateMongoId(userId);
+    try{
+        const deletedUser = await User.findByIdAndDelete(userId);
+        res.json(deletedUser)
+    }catch(err){
+        res.json(err);
+    }
+});
 
 
-module.exports = {userRegisterCtrl, userLoginCtrl};
+module.exports = {
+    userRegisterCtrl, 
+    userLoginCtrl, 
+    usersFetchCtrl, 
+    deleteUserCtrl
+};
