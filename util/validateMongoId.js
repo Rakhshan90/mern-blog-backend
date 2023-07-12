@@ -5,4 +5,4 @@ const validateMongoId = id =>{
     if(!isValid) throw new Error("Invalid user Id");
 }
 
-module.exports = validateMongoId
+module.exports = validateMongoId;

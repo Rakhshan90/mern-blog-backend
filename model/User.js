@@ -100,17 +100,21 @@ const userSchema = new mongoose.Schema({
       }
 );
 
-//hash password
+//Hash password
 userSchema.pre('save', async function(next){
-    const salt = await bcrypt.genSaltSync(10)
-    this.password = await bcrypt.hashSync(this.password, salt)
+    if (!this.isModified("password")) {
+        next();
+    }
+    //hash password
+    const salt = await bcrypt.genSalt(10)
+    this.password = await bcrypt.hash(this.password, salt)
     next();
-})
+});
 
 //Match password
 userSchema.methods.isPasswordMatch = async function(enteredPassword){
     return await bcrypt.compare(enteredPassword, this.password);
-}
+};
 
 
 //compile schema into model
