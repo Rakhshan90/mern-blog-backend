@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+var Mailgen = require('mailgen');
 const { generateToken } = require('../config/token/generateToken');
 const User = require('../model/User');
 const expressAsyncHandler = require('express-async-handler');
@@ -254,32 +255,67 @@ const unBlockUserCtrl = expressAsyncHandler(async (req, res) => {
 const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
     const loginUser = req.user.id;
     const user = await User.findById(loginUser);
-    console.log(user);
+    // console.log(user);
     try {
         //generate token
         const verificationToken = await user?.createAccountVerificationToken();
         //save user
         await user.save();
-        console.log(verificationToken);
+        // console.log(verificationToken);
         //Build your message
         const resetURL = `If your were requested to verify your account, please verify your account within 10 mins, otherwise ignore this meassage <a href="https://localhost:3000/verify-account/${verificationToken}">Click to verify your account<a/>`;
-        const testAccount = await nodemailer.createTestAccount();
+        // const testAccount = await nodemailer.createTestAccount();
         const transporter = await nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
+            service: 'gmail',
             auth: {
-                user: 'maye.pfeffer@ethereal.email',
-                pass: '3nK3e65pYUydrcPFPb'
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD,
             }
         });
+        
+
+        // Configure mailgen by setting a theme and your product info
+        var mailGenerator = new Mailgen({
+            theme: 'default',
+            product: {
+                // Appears in header & footer of e-mails
+                name: 'Blogster',
+                link: 'https://mailgen.js/'
+                // Optional product logo
+                // logo: 'https://mailgen.js/img/logo.png'
+            }
+        });
+        
+        var email = {
+            body: {
+                name: user?.firstName,
+                intro: 'Welcome to Blogster! Verify your account.',
+                action: {
+                    instructions: 'To get started with Blogster, please click here:',
+                    button: {
+                        color: '#22BC66', // Optional action button color
+                        text: 'Verify your account',
+                        link: 'href="https://localhost:3000/verify-account/${verificationToken}'
+                    }
+                },
+                outro: 'Do not reply to this email, It is an auto-generated email'
+            }
+        };
+        
+        // Generate an HTML email with the provided contents
+        var emailBody = mailGenerator.generate(email);
+
+
+
+
         const info = await transporter.sendMail({
-            from: '"Blogster" <blogster@gmail.com>', // sender address
+            from: process.env.EMAIL, // sender address
             to: user?.email, // list of receivers
             subject: "Verify your account ✔", // Subject line
-            text: "Hello world?", // plain text body
-            html: resetURL, // html body
+            // text: "Hello world?", // plain text body
+            html: emailBody, // html body
         });
-        console.log("Message sent: %s", info.messageId);
+        // console.log("Message sent: %s", info.messageId);
         res.json(resetURL);
     } catch (err) {
         res.json(err);
@@ -290,17 +326,17 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
 // ------------------------------------------//
 // ---  Account verification --- //
 // ------------------------------------------//
-const accountVerificationCtrl = expressAsyncHandler(async (req, res)=>{
-    const {token} = req.body;
+const accountVerificationCtrl = expressAsyncHandler(async (req, res) => {
+    const { token } = req.body;
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     console.log(hashedToken);
 
     //find this user by token
     const foundUser = await User.findOne({
         accountVerificationToken: hashedToken,
-        accountVerificationTokenExpires: {$gt: new Date()},
+        accountVerificationTokenExpires: { $gt: new Date() },
     });
-    if(!foundUser) throw new Error("Token is expired, try again later");
+    if (!foundUser) throw new Error("Token is expired, try again later");
     //set the property
     foundUser.isAccountVerified = true;
     foundUser.accountVerificationToken = undefined;
