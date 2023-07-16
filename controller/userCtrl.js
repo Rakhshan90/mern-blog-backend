@@ -273,9 +273,9 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
             }
         });
         const info = await transporter.sendMail({
-            from: '"Rakhshan ahmad" <ha8740650@gmail.com>', // sender address
-            to: "ha8740650@bbdnitm.ac.in", // list of receivers
-            subject: "Hello ✔", // Subject line
+            from: '"Blogster" <blogster@gmail.com>', // sender address
+            to: user?.email, // list of receivers
+            subject: "Verify your account ✔", // Subject line
             text: "Hello world?", // plain text body
             html: resetURL, // html body
         });
