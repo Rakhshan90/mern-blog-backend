@@ -1,5 +1,5 @@
 const express = require('express');
-const { userRegisterCtrl, userLoginCtrl, usersFetchCtrl, deleteUserCtrl, fetchUserDetailsCtrl, profilePhotoCtrl, updateUserCtrl, updateUserPasswordCtrl, followingUserCtrl, unfollowUserCtrl, blockUserCtrl, unBlockUserCtrl, generateVerificationTokenCtrl, accountVerificationCtrl } = require('../controller/userCtrl');
+const { userRegisterCtrl, userLoginCtrl, usersFetchCtrl, deleteUserCtrl, fetchUserDetailsCtrl, profilePhotoCtrl, updateUserCtrl, updateUserPasswordCtrl, followingUserCtrl, unfollowUserCtrl, blockUserCtrl, unBlockUserCtrl, generateVerificationTokenCtrl, accountVerificationCtrl, forgotPasswordTokenCtrl, passwordResetCtrl } = require('../controller/userCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
 
 const usersRouter = express.Router();
@@ -8,8 +8,12 @@ const usersRouter = express.Router();
 usersRouter.post('/register', userRegisterCtrl);
 usersRouter.post('/login', userLoginCtrl);
 usersRouter.get('/', authMiddleware, usersFetchCtrl);
+//password reset
+usersRouter.post('/forgot-password-token', forgotPasswordTokenCtrl);
+usersRouter.put('/reset-password', passwordResetCtrl);
 usersRouter.put('/password', authMiddleware ,updateUserPasswordCtrl);
 usersRouter.put('/follow', authMiddleware ,followingUserCtrl);
+//account verification
 usersRouter.post('/generate-verify-email-token', authMiddleware,generateVerificationTokenCtrl);
 usersRouter.put('/verify-token', authMiddleware, accountVerificationCtrl);
 usersRouter.put('/unfollow', authMiddleware ,unfollowUserCtrl);

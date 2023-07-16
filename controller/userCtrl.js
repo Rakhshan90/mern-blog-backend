@@ -308,15 +308,16 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
 
 
 
-        const info = await transporter.sendMail({
+        const emailMsg = await transporter.sendMail({
             from: process.env.EMAIL, // sender address
             to: user?.email, // list of receivers
-            subject: "Verify your account ✔", // Subject line
+            subject: "Verify your account", // Subject line
             // text: "Hello world?", // plain text body
             html: emailBody, // html body
         });
-        // console.log("Message sent: %s", info.messageId);
+        // console.log("Message sent: %s", emailMsg.messageId);
         res.json(resetURL);
+        // res.json(emailMsg);
     } catch (err) {
         res.json(err);
     }
@@ -345,6 +346,104 @@ const accountVerificationCtrl = expressAsyncHandler(async (req, res) => {
     res.json(foundUser);
 })
 
+// ------------------------------------------//
+// ---   Forgot password token generate  --- //
+// ------------------------------------------//
+const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
+    const{UserEmail} = req.body;
+    const user = await User.findOne({ email: UserEmail});
+    if(!user) throw new Error("User is not found");
+    try {
+        const token = await user.createResetPasswordToken()
+        await user.save();
+        console.log(token);
+
+
+
+        //build your message
+        const resetURL = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="https://localhost:3000/reset-password/${token}">Click to verify your account<a/>`;
+        // const testAccount = await nodemailer.createTestAccount();
+        const transporter = await nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD,
+            }
+        });
+        
+
+        // Configure mailgen by setting a theme and your product info
+        var mailGenerator = new Mailgen({
+            theme: 'default',
+            product: {
+                // Appears in header & footer of e-mails
+                name: 'Blogster',
+                link: 'https://mailgen.js/'
+                // Optional product logo
+                // logo: 'https://mailgen.js/img/logo.png'
+            }
+        });
+        
+        
+        var email = {
+            body: {
+                name: user?.firstName,
+                intro: 'Welcome to Blogster! Reset your password.',
+                action: {
+                    instructions: 'To Reset your password, please click here:',
+                    button: {
+                        color: '#22BC66', // Optional action button color
+                        text: 'Reset Password',
+                        link: 'href="https://localhost:3000/reset-password/${token}'
+                    }
+                },
+                outro: 'Do not reply to this email, It is an auto-generated email'
+            }
+        };
+        
+        // Generate an HTML email with the provided contents
+        var emailBody = mailGenerator.generate(email);
+
+
+
+
+        const emailMsg = await transporter.sendMail({
+            from: process.env.EMAIL, // sender address
+            to: user?.email, // list of receivers
+            subject: "Reset Your Password", // Subject line
+            // text: "Hello world?", // plain text body
+            html: emailBody, // html body
+        });
+        // console.log("Message sent: %s", emailMsg.messageId);
+        // res.json(emailMsg);
+        res.json(resetURL);
+    } catch (err) {
+        res.json(err);
+    }
+})
+
+// ------------------------------------------//
+// ---           password reset          --- //
+// ------------------------------------------//
+const passwordResetCtrl = expressAsyncHandler(async (req, res)=>{
+    const {token, password} = req.body;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    //find user by this token
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetTokenExpires: {$gt: new Date()}
+    })
+    if(!user) throw new Error("Token is expired, try again later");
+
+    //change password/update properties
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpires = undefined;
+     
+    await user.save();
+    res.json(user);
+})
+
 module.exports = {
     userRegisterCtrl,
     userLoginCtrl,
@@ -360,4 +459,6 @@ module.exports = {
     unBlockUserCtrl,
     generateVerificationTokenCtrl,
     accountVerificationCtrl,
+    forgotPasswordTokenCtrl,
+    passwordResetCtrl
 };

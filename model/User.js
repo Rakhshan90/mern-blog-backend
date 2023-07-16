@@ -121,13 +121,18 @@ userSchema.methods.isPasswordMatch = async function(enteredPassword){
 userSchema.methods.createAccountVerificationToken = async function(){
     //create token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    this.accountVerificationToken = crypto
-    .createHash("sha256")
-    .update(verificationToken)
-    .digest('hex');
+    this.accountVerificationToken = crypto.createHash("sha256").update(verificationToken).digest('hex');
     this.accountVerificationTokenExpires = Date.now() + 30*60*1000; //10mins
     return verificationToken;
 };
+
+//reset password
+userSchema.methods.createResetPasswordToken = async function(){
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest('hex');
+    this.passwordResetTokenExpires = Date.now() + 30*60*1000; //10mins
+    return resetToken;
+}
 
 //compile schema into model
 const User = mongoose.model('User', userSchema);
