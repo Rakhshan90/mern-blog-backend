@@ -1,12 +1,18 @@
 const express = require('express');
-const { userRegisterCtrl, userLoginCtrl, usersFetchCtrl, deleteUserCtrl, fetchUserDetailsCtrl, profilePhotoCtrl, updateUserCtrl, updateUserPasswordCtrl, followingUserCtrl, unfollowUserCtrl, blockUserCtrl, unBlockUserCtrl, generateVerificationTokenCtrl, accountVerificationCtrl, forgotPasswordTokenCtrl, passwordResetCtrl } = require('../controller/userCtrl');
+const { userRegisterCtrl, userLoginCtrl, usersFetchCtrl, deleteUserCtrl, fetchUserDetailsCtrl, profilePhotoCtrl, updateUserCtrl, updateUserPasswordCtrl, followingUserCtrl, unfollowUserCtrl, blockUserCtrl, unBlockUserCtrl, generateVerificationTokenCtrl, accountVerificationCtrl, forgotPasswordTokenCtrl, passwordResetCtrl, profilePhotoUploadCtrl } = require('../controller/userCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
+const {photoUpload, profilePhotoResize } = require('../middleware/photoUpload');
 
 const usersRouter = express.Router();
 
 
 usersRouter.post('/register', userRegisterCtrl);
 usersRouter.post('/login', userLoginCtrl);
+usersRouter.put('/profile-photo-upload', 
+authMiddleware,
+photoUpload.single('image'),
+profilePhotoResize,
+profilePhotoUploadCtrl);
 usersRouter.get('/', authMiddleware, usersFetchCtrl);
 //password reset
 usersRouter.post('/forgot-password-token', forgotPasswordTokenCtrl);

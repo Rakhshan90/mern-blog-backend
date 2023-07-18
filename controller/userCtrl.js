@@ -5,6 +5,7 @@ const User = require('../model/User');
 const expressAsyncHandler = require('express-async-handler');
 const validateMongoId = require('../util/validateMongoId');
 const crypto = require('crypto');
+const cloudinaryUploadImg = require("../util/cloudinary");
 
 // --------------------------------------//
 //          --- Register --- //
@@ -444,6 +445,20 @@ const passwordResetCtrl = expressAsyncHandler(async (req, res)=>{
     res.json(user);
 })
 
+// ------------------------------------------//
+// ---      Profile photo upload         --- //
+// ------------------------------------------//
+const profilePhotoUploadCtrl = expressAsyncHandler( async(req, res)=>{
+    //Get the path to img
+    const localpath = `public/images/${req.file.filename}`;
+
+    //upload to cloudinary 
+    const imgUpload = await cloudinaryUploadImg(localpath);
+    console.log(imgUpload);
+    res.json(localpath);
+})
+
+
 module.exports = {
     userRegisterCtrl,
     userLoginCtrl,
@@ -460,5 +475,6 @@ module.exports = {
     generateVerificationTokenCtrl,
     accountVerificationCtrl,
     forgotPasswordTokenCtrl,
-    passwordResetCtrl
+    passwordResetCtrl,
+    profilePhotoUploadCtrl,
 };
