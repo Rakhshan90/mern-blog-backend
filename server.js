@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const { userRegisterCtrl, userLoginCtrl } = require('./controller/userCtrl');
 const usersRouter = require('./router/usersRoute');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const postRouter = require('./router/postRoute');
 
 dotenv.config();
 const app = express(); 
@@ -21,6 +22,8 @@ app.use(express.json());
 //User route
 app.use('/api/users', usersRouter);
 
+//Post route
+app.use('/api/post', postRouter);
 
 
 

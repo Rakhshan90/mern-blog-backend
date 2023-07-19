@@ -449,13 +449,21 @@ const passwordResetCtrl = expressAsyncHandler(async (req, res)=>{
 // ---      Profile photo upload         --- //
 // ------------------------------------------//
 const profilePhotoUploadCtrl = expressAsyncHandler( async(req, res)=>{
+    //Find the login user
+    const{_id} = req.user;
     //Get the path to img
     const localpath = `public/images/${req.file.filename}`;
 
     //upload to cloudinary 
     const imgUpload = await cloudinaryUploadImg(localpath);
+    //update user profile photo
+    const updatedUser = await User.findByIdAndUpdate(_id,
+        {
+            profilePhoto: imgUpload?.url
+        },
+        {new: true});
     console.log(imgUpload);
-    res.json(localpath);
+    res.json(updatedUser);
 })
 
 
