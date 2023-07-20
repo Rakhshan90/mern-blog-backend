@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 var Mailgen = require('mailgen');
+const fs = require('fs');
 const { generateToken } = require('../config/token/generateToken');
 const User = require('../model/User');
 const expressAsyncHandler = require('express-async-handler');
@@ -110,7 +111,7 @@ const profilePhotoCtrl = expressAsyncHandler(async (req, res) => {
     //check if user id is valid or not
     validateMongoId(id);
     try {
-        const profile = await User.findById(id);
+        const profile = await User.findById(id).populate('posts');
         res.json(profile);
     } catch (err) {
         res.json(err);
@@ -452,7 +453,7 @@ const profilePhotoUploadCtrl = expressAsyncHandler( async(req, res)=>{
     //Find the login user
     const{_id} = req.user;
     //Get the path to img
-    const localpath = `public/images/${req.file.filename}`;
+    const localpath = `public/images/profiles/${req.file.filename}`;
 
     //upload to cloudinary 
     const imgUpload = await cloudinaryUploadImg(localpath);
@@ -463,6 +464,8 @@ const profilePhotoUploadCtrl = expressAsyncHandler( async(req, res)=>{
         },
         {new: true});
     console.log(imgUpload);
+    //remove uploaded image 
+    fs.unlinkSync(localpath);
     res.json(updatedUser);
 })
 
