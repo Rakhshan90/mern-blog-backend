@@ -11,7 +11,6 @@ const cloudinaryUploadImg = require("../util/cloudinary");
 //          ---   Creating Post      --- //
 // --------------------------------------//
 const createPostCtrl = expressAsyncHandler(async (req, res) => {
-    console.log(req.file);
     const { _id } = req.user;
     // const user = req.body.user;
     // validateMongoId(user);
@@ -61,15 +60,15 @@ const fetchPostsCtrl = expressAsyncHandler(async (req, res) => {
 //     ---   Fetch Post details      --- //
 // --------------------------------------//
 const fetchPostCtrl = expressAsyncHandler(async (req, res) => {
-    const {id} = req.params;
+    const { id } = req.params;
     validateMongoId(id);
     try {
-        const post = await Post.findById(id).populate('user');
+        const post = await Post.findById(id).populate('user').populate('dislikes').populate('likes');
         //update number of views on post
         await Post.findByIdAndUpdate(id,
             {
-                $inc: {numOfViews: 1},
-            }, {new: true}
+                $inc: { numOfViews: 1 },
+            }, { new: true }
         )
         res.json(post);
     } catch (error) {
@@ -80,16 +79,16 @@ const fetchPostCtrl = expressAsyncHandler(async (req, res) => {
 // --------------------------------------//
 //     ---      Update Post          --- //
 // --------------------------------------//
-const updatePostCtrl = expressAsyncHandler(async (req, res)=>{
-    const {id} = req.params;
+const updatePostCtrl = expressAsyncHandler(async (req, res) => {
+    const { id } = req.params;
     validateMongoId(id);
     try {
-        const updatedPost = await Post.findByIdAndUpdate(id, 
+        const updatedPost = await Post.findByIdAndUpdate(id,
             {
                 ...req.body,
                 user: req.user?._id,
-            }, 
-            {new: true})
+            },
+            { new: true })
         res.json(updatedPost);
     } catch (error) {
         res.json(error);
@@ -97,19 +96,111 @@ const updatePostCtrl = expressAsyncHandler(async (req, res)=>{
 })
 
 // --------------------------------------//
-//     ---      Update Post          --- //
+//     ---      Delete Post          --- //
 // --------------------------------------//
-const deletePostCtrl = expressAsyncHandler(async (req, res)=>{
-    const {id} = req.params;
+const deletePostCtrl = expressAsyncHandler(async (req, res) => {
+    const { id } = req.params;
     validateMongoId(id);
     try {
         const deletedPost = await Post.findByIdAndDelete(id);
         res.json(deletedPost);
     } catch (error) {
-        res.json(error);   
+        res.json(error);
     }
 })
 
+// --------------------------------------//
+//     ---      Like to Post         --- //
+// --------------------------------------//
+const likeToPostCtrl = expressAsyncHandler(async (req, res) => {
+    //1. find post that user want to like
+    const { postId } = req.body;
+    const post = await Post.findById(postId);
+    //2. find login user
+    const loginUserId = req?.user?._id;
+    //3. find is this user has liked this post?
+    const isLiked = post?.isLiked
+    //4. check if this user has disliked this post
+    const alreadyDisliked = post?.dislikes?.find(
+        userId => userId?.toString() === loginUserId?.toString()
+    );
+    //5. remove the user from dislikes array if exists
+    if (alreadyDisliked) {
+        const post = await Post.findByIdAndUpdate(postId,
+            {
+                $pull: { dislikes: loginUserId },
+                isDisLiked: false,
+            },
+            { new: true })
+        res.json(post);
+    }
+    //toggle
+    //6. remove the user if he has already liked the post
+    if (isLiked) {
+        const post = await Post.findByIdAndUpdate(postId,
+            {
+                $pull: { likes: loginUserId },
+                isLiked: false,
+            },
+            { new: true })
+        res.json(post);
+    }
+    else {
+        //add to likes
+        const post = await Post.findByIdAndUpdate(postId,
+            {
+                $push: { likes: loginUserId },
+                isLiked: true,
+            },
+            { new: true })
+        res.json(post);
+    }
+});
+
+// --------------------------------------//
+//     ---      dislike to Post      --- //
+// --------------------------------------//
+const dislikeToPostCtrl = expressAsyncHandler(async (req, res) => {
+    //1. find the post that user want to dislike
+    const { postId } = req.body;
+    const post = await Post.findById(postId);
+    //2. find the user
+    const loginUserId = req?.user?._id;
+    //3. find is this user has disliked this post?
+    const isDisLiked = post?.isDisLiked
+    //4. check if this user has liked this post
+    const alreadyLiked = post?.likes?.find(
+        userId => userId?.toString() === loginUserId?.toString()
+    )
+    //5. remove this user from likes array if exists
+    if (alreadyLiked) {
+        const post = await Post.findByIdAndUpdate(postId,
+            {
+                $pull: {likes: loginUserId},
+                isLiked: false,
+            }, {new: true})
+        res.json(post);
+    }
+    //toggle
+    //6. remove the user if he has already disliked the post
+    if(isDisLiked){
+        const post = await Post.findByIdAndUpdate(postId, 
+            {
+                $pull: {dislikes: loginUserId},
+                isDisLiked: false,
+            }, {new: true})
+        res.json(post);
+    }
+    else{
+        const post = await Post.findByIdAndUpdate(postId, 
+            {
+                $push: {dislikes: loginUserId},
+                isDisLiked: true,
+            }, {new: true})
+        res.json(post);
+    }
+
+});
 
 module.exports =
 {
@@ -118,4 +209,6 @@ module.exports =
     fetchPostCtrl,
     updatePostCtrl,
     deletePostCtrl,
+    likeToPostCtrl,
+    dislikeToPostCtrl,
 }
