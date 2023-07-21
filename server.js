@@ -5,6 +5,7 @@ const { userRegisterCtrl, userLoginCtrl } = require('./controller/userCtrl');
 const usersRouter = require('./router/usersRoute');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const postRouter = require('./router/postRoute');
+const commentRouter = require('./router/commentRoute');
 
 dotenv.config();
 const app = express(); 
@@ -25,6 +26,8 @@ app.use('/api/users', usersRouter);
 //Post route
 app.use('/api/post', postRouter);
 
+//Comment route
+app.use('/api/comment', commentRouter);
 
 
 
