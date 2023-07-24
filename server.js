@@ -6,6 +6,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const postRouter = require('./router/postRoute');
 const commentRouter = require('./router/commentRoute');
 const emailMsgRouter = require('./router/emailMsgRoute');
+const categoryRouter = require('./router/categoryRoute');
 
 dotenv.config();
 const app = express(); 
@@ -32,6 +33,8 @@ app.use('/api/comment', commentRouter);
 //email route
 app.use('/api/email', emailMsgRouter);
 
+//category route
+app.use('/api/category', categoryRouter);
 
 
 //error handler 

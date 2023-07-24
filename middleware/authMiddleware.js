@@ -6,7 +6,7 @@ const authMiddleware = expressAsyncHandler( async(req, res, next)=>{
     let token;
     //upon any request, check if there is any token 
     if(req?.headers?.authorization?.startsWith("Bearer")){
-        token = req.headers.authorization.split(" ")[1];
+        token = req.headers.authorization.split(" ")[1]; 
         try {
             if(token){
                 const decoded = jwt.verify(token, process.env.JWT_KEY);
