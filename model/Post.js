@@ -4,13 +4,12 @@ const postSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            // required: [true, 'Title is required'],
+            required: [true, 'Title is required'],
             trim: true,
         },
         category: {
             type: String,
-            // required: [true, 'Post category is required'],
-
+            required: [true, 'Post category is required'],
         },
         isLiked: {
             type: Boolean,

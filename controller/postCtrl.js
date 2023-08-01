@@ -12,8 +12,6 @@ const cloudinaryUploadImg = require("../util/cloudinary");
 // --------------------------------------//
 const createPostCtrl = expressAsyncHandler(async (req, res) => {
     const { _id } = req.user;
-    // const user = req.body.user;
-    // validateMongoId(user);
     const filter = new Filter();
     const profaneTitle = filter.isProfane(req.body.title);
     const profaneDescription = filter.isProfane(req.body.description);
@@ -31,13 +29,13 @@ const createPostCtrl = expressAsyncHandler(async (req, res) => {
     //upload to cloudinary 
     const imgUpload = await cloudinaryUploadImg(localpath);
     try {
-        // const post = await Post.create({
-        //     ...req.body,
-        //     image: imgUpload?.url,
-        //     user: _id,
-        // });
-        res.json(imgUpload);
-        //remove uploaded image 
+        const post = await Post.create({
+            ...req.body,
+            image: imgUpload?.url,
+            user: _id,
+        });
+        res.json(post);
+        //remove uploaded image from backend not cloudinary
         fs.unlinkSync(localpath);
     } catch (error) {
         res.json(error);

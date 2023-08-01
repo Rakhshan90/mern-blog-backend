@@ -1,12 +1,14 @@
 const express = require('express');
 const dbConnect = require('./config/db/dbConnect');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const usersRouter = require('./router/usersRoute');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const postRouter = require('./router/postRoute');
 const commentRouter = require('./router/commentRoute');
 const emailMsgRouter = require('./router/emailMsgRoute');
 const categoryRouter = require('./router/categoryRoute');
+
 
 dotenv.config();
 const app = express(); 
@@ -19,6 +21,8 @@ This express middleware is responsible for parsing the incoming json data into r
 */ 
 app.use(express.json());
 
+//cors 
+app.use(cors());
 
 
 //User route
