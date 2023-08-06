@@ -46,9 +46,17 @@ const createPostCtrl = expressAsyncHandler(async (req, res) => {
 //        ---   Fetch all Posts      --- //
 // --------------------------------------//
 const fetchPostsCtrl = expressAsyncHandler(async (req, res) => {
+    const hasCategory = req.query.category
     try {
-        const posts = await Post.find({}).populate('user')
-        res.json(posts);
+        if(hasCategory){
+            const posts = await Post.find({category:hasCategory}).populate('user')
+            .populate('comments')
+            res.json(posts);
+        }
+        else{
+            const posts = await Post.find({}).populate('user').populate('comments')
+            res.json(posts);
+        }
     } catch (error) {
         res.json(error);
     }
@@ -61,7 +69,7 @@ const fetchPostCtrl = expressAsyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongoId(id);
     try {
-        const post = await Post.findById(id).populate('user').populate('dislikes').populate('likes');
+        const post = await Post.findById(id).populate('user').populate('dislikes').populate('likes').populate('comments');
         //update number of views on post
         await Post.findByIdAndUpdate(id,
             {
