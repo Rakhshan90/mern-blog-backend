@@ -26,6 +26,11 @@ const createPostCtrl = expressAsyncHandler(async (req, res) => {
             });
         throw new Error("Creating post failed because it contains profane words and you have been blocked");
     }
+
+    //prevent user form creating more than two posts if his/her account is starter account
+    if(req?.user?.accountType === 'Starter Account' && req?.user?.postCount >=2) {
+        throw new Error("Starter account can create only two posts. Make more followers");
+    } 
     //Get the path to img
     const localpath = `public/images/posts/${req.file.filename}`;
 
@@ -37,9 +42,14 @@ const createPostCtrl = expressAsyncHandler(async (req, res) => {
             image: imgUpload?.url,
             user: _id,
         });
-        res.json(post);
+
+        //update the user post count
+        await User.findByIdAndUpdate(_id, {
+            $inc: {postCount: 1}
+        }, {new: true});
         //remove uploaded image from backend not cloudinary
         fs.unlinkSync(localpath);
+        res.json(post);
     } catch (error) {
         res.json(error);
     }

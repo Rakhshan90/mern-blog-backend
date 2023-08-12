@@ -117,13 +117,11 @@ const profilePhotoCtrl = expressAsyncHandler(async (req, res) => {
 
     //Get the login user
     const loginUserId = req?.user?._id?.toString();
-    console.log(typeof loginUserId);
     try {
         const myProfile = await User.findById(id)
             .populate("posts")
             .populate("viewedBy");
         const alreadyViewed = myProfile?.viewedBy?.find(user => {
-            console.log(user);
             return user?._id?.toString() === loginUserId;
         });
         if (alreadyViewed) {
@@ -164,7 +162,6 @@ const updateUserCtrl = expressAsyncHandler(async (req, res) => {
 const updateUserPasswordCtrl = expressAsyncHandler(async (req, res) => {
     //destructure login user from req object
     const { _id } = req.user;
-    console.log(_id);
     //check if user id is valid or not
     validateMongoId(_id);
     //destructure input password from req.body
@@ -378,12 +375,9 @@ const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
     try {
         const token = await user.createResetPasswordToken()
         await user.save();
-        console.log(token);
-
-
 
         //build your message
-        const resetURL = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="https://localhost:3000/reset-password/${token}">Click to verify your account<a/>`;
+        const resetURL = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="http://localhost:5173/reset-password/${token}">Click to verify your account<a/>`;
         // const testAccount = await nodemailer.createTestAccount();
         const transporter = await nodemailer.createTransport({
             service: 'gmail',
@@ -416,7 +410,7 @@ const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
                     button: {
                         color: '#22BC66', // Optional action button color
                         text: 'Reset Password',
-                        link: 'href="https://localhost:3000/reset-password/${token}'
+                        link: `http://localhost:5173/reset-password/${token}`
                     }
                 },
                 outro: 'Do not reply to this email, It is an auto-generated email'
