@@ -5,6 +5,7 @@ const expressAsyncHandler = require('express-async-handler');
 const validateMongoId = require("../util/validateMongoId");
 const User = require("../model/User");
 const cloudinaryUploadImg = require("../util/cloudinary");
+const blockUser = require("../util/blockUser");
 
 
 // --------------------------------------//
@@ -12,6 +13,8 @@ const cloudinaryUploadImg = require("../util/cloudinary");
 // --------------------------------------//
 const createPostCtrl = expressAsyncHandler(async (req, res) => {
     const { _id } = req.user;
+    //check if user is bloged make sure user cannot create a new comment
+    blockUser(req.user);
     const filter = new Filter();
     const profaneTitle = filter.isProfane(req.body.title);
     const profaneDescription = filter.isProfane(req.body.description);
@@ -50,11 +53,11 @@ const fetchPostsCtrl = expressAsyncHandler(async (req, res) => {
     try {
         if(hasCategory){
             const posts = await Post.find({category:hasCategory}).populate('user')
-            .populate('comments')
+            .populate('comments').sort('-createdAt')
             res.json(posts);
         }
         else{
-            const posts = await Post.find({}).populate('user').populate('comments')
+            const posts = await Post.find({}).populate('user').populate('comments').sort('-createdAt')
             res.json(posts);
         }
     } catch (error) {

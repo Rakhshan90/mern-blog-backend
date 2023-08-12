@@ -7,6 +7,7 @@ const expressAsyncHandler = require('express-async-handler');
 const validateMongoId = require('../util/validateMongoId');
 const crypto = require('crypto');
 const cloudinaryUploadImg = require("../util/cloudinary");
+const blockUser = require("../util/blockUser");
 
 // --------------------------------------//
 //          --- Register --- //
@@ -50,6 +51,7 @@ const userLoginCtrl = expressAsyncHandler(async (req, res) => {
             profilePhoto: userFound?.profilePhoto,
             isAdmin: userFound?.isAdmin,
             token: generateToken(userFound?._id),
+            isVerified: userFound?.isAccountVerified
         });
     }
     else {
@@ -66,7 +68,7 @@ const userLoginCtrl = expressAsyncHandler(async (req, res) => {
 // --------------------------------------//
 const usersFetchCtrl = expressAsyncHandler(async (req, res) => {
     try {
-        const users = await User.find({});
+        const users = await User.find({}).populate('posts');
         res.json(users);
     } catch (err) {
         res.json(err);
@@ -108,13 +110,32 @@ const fetchUserDetailsCtrl = expressAsyncHandler(async (req, res) => {
 // --------------------------------------//
 const profilePhotoCtrl = expressAsyncHandler(async (req, res) => {
     const { id } = req.params;
-    //check if user id is valid or not
     validateMongoId(id);
+    //1. find the login user and check if login user already exists 
+    // inside viewedBy property of profile user then simply return only the profile
+    //2. if not exists, then add login user to the viewBy property of profile user
+
+    //Get the login user
+    const loginUserId = req?.user?._id?.toString();
+    console.log(typeof loginUserId);
     try {
-        const profile = await User.findById(id).populate('posts');
-        res.json(profile);
-    } catch (err) {
-        res.json(err);
+        const myProfile = await User.findById(id)
+            .populate("posts")
+            .populate("viewedBy");
+        const alreadyViewed = myProfile?.viewedBy?.find(user => {
+            console.log(user);
+            return user?._id?.toString() === loginUserId;
+        });
+        if (alreadyViewed) {
+            res.json(myProfile);
+        } else {
+            const profile = await User.findByIdAndUpdate(myProfile?._id, {
+                $push: { viewedBy: loginUserId },
+            });
+            res.json(profile);
+        }
+    } catch (error) {
+        res.json(error);
     }
 })
 
@@ -122,7 +143,6 @@ const profilePhotoCtrl = expressAsyncHandler(async (req, res) => {
 //          --- update user --- //
 // --------------------------------------//
 const updateUserCtrl = expressAsyncHandler(async (req, res) => {
-    // console.log(req.user);
     const { _id } = req?.user;
     //check if user id is valid or not
     validateMongoId(_id);
@@ -265,7 +285,7 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
         await user.save();
         // console.log(verificationToken);
         //Build your message
-        const resetURL = `If your were requested to verify your account, please verify your account within 10 mins, otherwise ignore this meassage <a href="https://localhost:3000/verify-account/${verificationToken}">Click to verify your account<a/>`;
+        const resetURL = `If your were requested to verify your account, please verify your account within 10 mins, otherwise ignore this meassage <a href="http://localhost:5173/verify-account/${verificationToken}">Click to verify your account<a/>`;
         // const testAccount = await nodemailer.createTestAccount();
         const transporter = await nodemailer.createTransport({
             service: 'gmail',
@@ -274,7 +294,7 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
                 pass: process.env.PASSWORD,
             }
         });
-        
+
 
         // Configure mailgen by setting a theme and your product info
         var mailGenerator = new Mailgen({
@@ -287,7 +307,7 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
                 // logo: 'https://mailgen.js/img/logo.png'
             }
         });
-        
+
         var email = {
             body: {
                 name: user?.firstName,
@@ -297,13 +317,13 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
                     button: {
                         color: '#22BC66', // Optional action button color
                         text: 'Verify your account',
-                        link: 'href="https://localhost:3000/verify-account/${verificationToken}'
+                        link: `http://localhost:5173/verify-account/${verificationToken}`
                     }
                 },
                 outro: 'Do not reply to this email, It is an auto-generated email'
             }
         };
-        
+
         // Generate an HTML email with the provided contents
         var emailBody = mailGenerator.generate(email);
 
@@ -332,7 +352,7 @@ const generateVerificationTokenCtrl = expressAsyncHandler(async (req, res) => {
 const accountVerificationCtrl = expressAsyncHandler(async (req, res) => {
     const { token } = req.body;
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    console.log(hashedToken);
+
 
     //find this user by token
     const foundUser = await User.findOne({
@@ -351,10 +371,10 @@ const accountVerificationCtrl = expressAsyncHandler(async (req, res) => {
 // ------------------------------------------//
 // ---   Forgot password token generate  --- //
 // ------------------------------------------//
-const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
-    const{UserEmail} = req.body;
-    const user = await User.findOne({ email: UserEmail});
-    if(!user) throw new Error("User is not found");
+const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
+    const { UserEmail } = req.body;
+    const user = await User.findOne({ email: UserEmail });
+    if (!user) throw new Error("User is not found");
     try {
         const token = await user.createResetPasswordToken()
         await user.save();
@@ -372,7 +392,7 @@ const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
                 pass: process.env.PASSWORD,
             }
         });
-        
+
 
         // Configure mailgen by setting a theme and your product info
         var mailGenerator = new Mailgen({
@@ -385,8 +405,8 @@ const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
                 // logo: 'https://mailgen.js/img/logo.png'
             }
         });
-        
-        
+
+
         var email = {
             body: {
                 name: user?.firstName,
@@ -402,7 +422,7 @@ const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
                 outro: 'Do not reply to this email, It is an auto-generated email'
             }
         };
-        
+
         // Generate an HTML email with the provided contents
         var emailBody = mailGenerator.generate(email);
 
@@ -427,21 +447,21 @@ const forgotPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
 // ------------------------------------------//
 // ---           password reset          --- //
 // ------------------------------------------//
-const passwordResetCtrl = expressAsyncHandler(async (req, res)=>{
-    const {token, password} = req.body;
+const passwordResetCtrl = expressAsyncHandler(async (req, res) => {
+    const { token, password } = req.body;
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     //find user by this token
     const user = await User.findOne({
         passwordResetToken: hashedToken,
-        passwordResetTokenExpires: {$gt: new Date()}
+        passwordResetTokenExpires: { $gt: new Date() }
     })
-    if(!user) throw new Error("Token is expired, try again later");
+    if (!user) throw new Error("Token is expired, try again later");
 
     //change password/update properties
     user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpires = undefined;
-     
+
     await user.save();
     res.json(user);
 })
@@ -449,9 +469,11 @@ const passwordResetCtrl = expressAsyncHandler(async (req, res)=>{
 // ------------------------------------------//
 // ---      Profile photo upload         --- //
 // ------------------------------------------//
-const profilePhotoUploadCtrl = expressAsyncHandler( async(req, res)=>{
+const profilePhotoUploadCtrl = expressAsyncHandler(async (req, res) => {
     //Find the login user
-    const{_id} = req.user;
+    const { _id } = req.user;
+    //check if user is bloged make sure user cannot create a new comment
+    blockUser(req.user);
     //Get the path to img
     const localpath = `public/images/profiles/${req.file.filename}`;
 
@@ -462,8 +484,7 @@ const profilePhotoUploadCtrl = expressAsyncHandler( async(req, res)=>{
         {
             profilePhoto: imgUpload?.url
         },
-        {new: true});
-    console.log(imgUpload);
+        { new: true });
     //remove uploaded image 
     fs.unlinkSync(localpath);
     res.json(updatedUser);

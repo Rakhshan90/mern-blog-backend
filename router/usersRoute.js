@@ -26,7 +26,7 @@ usersRouter.put('/unfollow', authMiddleware ,unfollowUserCtrl);
 usersRouter.put('/block-user/:id', authMiddleware ,blockUserCtrl);
 usersRouter.put('/unblock-user/:id', authMiddleware ,unBlockUserCtrl);
 usersRouter.get('/profile/:id',authMiddleware ,profilePhotoCtrl);
-usersRouter.put('/:id', authMiddleware ,updateUserCtrl);
+usersRouter.put('/', authMiddleware ,updateUserCtrl);
 usersRouter.delete('/:id', deleteUserCtrl);
 usersRouter.get('/:id', fetchUserDetailsCtrl);
 

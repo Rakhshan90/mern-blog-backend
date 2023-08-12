@@ -1,6 +1,7 @@
 const expressAsyncHandler = require("express-async-handler");
 const Comment = require("../model/Comment");
 const validateMongoId = require("../util/validateMongoId");
+const blockUser = require("../util/blockUser");
 
 
 // --------------------------------------//
@@ -9,6 +10,8 @@ const validateMongoId = require("../util/validateMongoId");
 const createCommentCtrl = expressAsyncHandler(async (req, res) => {
     //1. Get login user
     const user = req.user;
+    //check if user is bloged make sure user cannot create a new comment
+    blockUser(user);
     //2. Get the post and comment description
     const { postId, description } = req.body;
     //3. Now create the comment
@@ -57,16 +60,16 @@ const fetchCommentCtrl = expressAsyncHandler(async (req, res) => {
 // --------------------------------------//
 //       ---  update single Comment  --- //
 // --------------------------------------//
-const updateCommentCtrl = expressAsyncHandler(async (req, res)=>{
-    const{id} = req.params;
+const updateCommentCtrl = expressAsyncHandler(async (req, res) => {
+    const { id } = req.params;
     validateMongoId(id);
     try {
-        const comment = await Comment.findByIdAndUpdate(id, 
+        const comment = await Comment.findByIdAndUpdate(id,
             {
                 user: req?.user,
                 description: req?.body?.description
             },
-            {new: true, runValidators: true})
+            { new: true, runValidators: true })
         res.json(comment);
     } catch (error) {
         res.json(error);
@@ -76,8 +79,8 @@ const updateCommentCtrl = expressAsyncHandler(async (req, res)=>{
 // --------------------------------------//
 //       ---  Delete single Comment  --- //
 // --------------------------------------//
-const deletePostCtrl = expressAsyncHandler(async (req, res)=>{
-    const {id} = req.params;
+const deletePostCtrl = expressAsyncHandler(async (req, res) => {
+    const { id } = req.params;
     validateMongoId(id);
     try {
         const comment = await Comment.findByIdAndDelete(id);
