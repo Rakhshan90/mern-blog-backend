@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "Blog web app",
   "main": "server.js",
+  "engines": {
+    "node": "v18.12.1"
+  },
   "scripts": {
-    "start": "nodemon server.js",
-    "server": "node server.js"
+    "start": "node server.js",
+    "server": "nodemon server.js"
   },
   "author": "Rakhshan Ahmad",
   "license": "ISC",
