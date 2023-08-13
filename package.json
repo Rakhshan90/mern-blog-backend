@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Blog web app",
   "main": "server.js",
-  "engines": {
-    "node": "v18.12.1"
-  },
   "scripts": {
     "start": "node server.js",
     "server": "nodemon server.js"
