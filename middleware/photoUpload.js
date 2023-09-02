@@ -1,6 +1,6 @@
 const multer = require('multer');
-const sharp = require('sharp');
-const path = require('path');
+// const sharp = require('sharp');
+// const path = require('path');
 
 //storage
 const multerStorage = multer.memoryStorage();
@@ -28,35 +28,36 @@ const photoUpload = multer({
 
 
 //Profile photo resizing
-const profilePhotoResize  = async(req, res, next)=>{
-    //check if there is no file exist
-    if(!req.file) return next();
+// const profilePhotoResize  = async(req, res, next)=>{
+//     //check if there is no file exist
+//     if(!req.file) return next();
 
-    req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
-    // console.log("Resizing", req.file);
+//     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+//     // console.log("Resizing", req.file);
 
-    await sharp(req.file.buffer)
-    .resize(250, 250)
-    .toFormat("jpeg")
-    .jpeg({quality: 90})
-    .toFile(path.join(`public/images/profiles/${req.file.filename}`));
-    next();
-};
+//     await sharp(req?.file?.buffer)
+//     .resize(250, 250)
+//     .toFormat("jpeg")
+//     .jpeg({quality: 90})
+//     .toBuffer(); // Convert the resized image to a buffer
+//     next();
+// };
 
 //post image resizing
-const postImgResize  = async(req, res, next)=>{
-    //check if there is no file exist
-    if(!req.file) return next();
+// const postImgResize  = async(req, res, next)=>{
+//     //check if there is no file exist
+//     if(!req.file) return next();
 
-    req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
-    // console.log("Resizing", req.file);
+//     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+//     // console.log("Resizing", req.file);
 
-    await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat("jpeg")
-    .jpeg({quality: 90})
-    .toFile(path.join(`public/images/posts/${req.file.filename}`));
-    next();
-};
+//     await sharp(req?.file?.buffer)
+//     .resize(500, 500)
+//     .toFormat("jpeg")
+//     .jpeg({quality: 90})
+//     .toBuffer(); // Convert the resized image to a buffer
+//     next();
+// };
 
-module.exports = {photoUpload, profilePhotoResize, postImgResize };
+// module.exports = {photoUpload, profilePhotoResize, postImgResize };
+module.exports = { photoUpload };
