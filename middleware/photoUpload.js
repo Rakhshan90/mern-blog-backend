@@ -9,10 +9,13 @@ const multerStorage = multer.memoryStorage();
 const multerFilter = (req, file, cb)=>{
     //check file type
     if(file.mimetype.startsWith("image")){
+        //continue asynchronous operation of multer middleware 
+        //cb -> callback
         cb(null, true);
     }
     else{
         //rejected
+        //cb -> callback
         cb({message: "unsupported file format"}, false);
     }
 };
