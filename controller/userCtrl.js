@@ -466,23 +466,21 @@ const passwordResetCtrl = expressAsyncHandler(async (req, res) => {
 const profilePhotoUploadCtrl = expressAsyncHandler(async (req, res) => {
     //Find the login user
     const { _id } = req.user;
-    //check if user is bloged make sure user cannot upload profile photo
+    //check if user is bloged make sure user cannot create a new comment
     blockUser(req.user);
     //Get the path to img
-    // const localpath = `public/images/profiles/${req.file.filename}`;
-    // Get the image data from the request of multer buffer
-    const imageBuffer = req.file.buffer;
-    const img = imageBuffer.toString();
-    //upload to cloudinary 
+    const localpath = `public/images/profiles/${req.file.filename}`;
 
-    const imgUpload = await cloudinaryUploadImg(img);
-    console.log(imgUpload);
+    //upload to cloudinary 
+    const imgUpload = await cloudinaryUploadImg(localpath);
     //update user profile photo
     const updatedUser = await User.findByIdAndUpdate(_id,
         {
             profilePhoto: imgUpload?.url
         },
         { new: true });
+    //remove uploaded image 
+    fs.unlinkSync(localpath);
     res.json(updatedUser);
 })
 

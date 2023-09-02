@@ -1,5 +1,5 @@
 const dotenv = require('dotenv');
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('cloudinary');
 dotenv.config();
 
 cloudinary.config({
@@ -8,9 +8,9 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY,
 });
 
-const cloudinaryUploadImg = async imageBuffer =>{
+const cloudinaryUploadImg = async fileToUpload =>{
     try {
-        const data = await cloudinary.uploader.upload(imageBuffer,
+        const data = await cloudinary.uploader.upload(fileToUpload,
             {
                 resource_type: "auto",
             });

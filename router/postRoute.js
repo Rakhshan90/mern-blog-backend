@@ -1,13 +1,14 @@
 const express = require('express');
 const { createPostCtrl, fetchPostsCtrl, fetchPostCtrl, updatePostCtrl, deletePostCtrl, likeToPostCtrl, dislikeToPostCtrl } = require('../controller/postCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
-const { photoUpload } = require('../middleware/photoUpload');
+const { photoUpload, postImgResize } = require('../middleware/photoUpload');
 
 const postRouter = express.Router();
 
 postRouter.post('/', 
 authMiddleware, 
 photoUpload.single('image'),
+postImgResize,
 createPostCtrl);
 
 postRouter.put('/like', authMiddleware ,likeToPostCtrl);
